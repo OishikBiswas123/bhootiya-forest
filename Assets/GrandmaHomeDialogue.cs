@@ -8,6 +8,8 @@ public class GrandmaHomeDialogue : MonoBehaviour
     [Header("NPC Settings")]
     public float interactionDistance = 3f;
     public KeyCode interactKey = KeyCode.X;
+    public float inputCooldown = 0.3f;
+    private float lastInputTime = 0f;
 
     [Header("Outside -> Home Dialogue")]
     [TextArea(2, 3)]
@@ -90,6 +92,8 @@ public class GrandmaHomeDialogue : MonoBehaviour
 
         if (InputBridge.GetKeyDown(interactKey))
         {
+            if (Time.time - lastInputTime < inputCooldown) return;
+            lastInputTime = Time.time;
             HandleInteraction();
         }
     }

@@ -12,6 +12,9 @@ public class PlayerMove : MonoBehaviour
     public enum RunMode { Hold, Tap }
     public RunMode runMode = RunMode.Hold;
     
+    [Header("Debug")]
+    public bool enableDebugLogs = false;
+    
     [Header("Idle Sprites - Drag from Project Window")]
     public Sprite idleDown;   // Front/Down (Direction 1)
     public Sprite idleUp;     // Back/Up (Direction 2)
@@ -25,6 +28,8 @@ public class PlayerMove : MonoBehaviour
     private bool isMoving = false;
     private int currentDirection = 0;
     private int lastMovingDirection = 1; // Default facing front (Direction 1)
+    
+    public int LastFacingDirection => lastMovingDirection;
     private float lockedYPosition;
     private bool runToggledOn = false;
     private bool runKeyHeld = false;
@@ -246,6 +251,14 @@ public class PlayerMove : MonoBehaviour
     
     bool IsRunning()
     {
+        // Can't run while frozen or interacting
+        if (externalFreeze)
+            return false;
+        
+        // Check interaction freeze via GameManager
+        if (GameManager.Instance != null && GameManager.Instance.isInteracting)
+            return false;
+        
         if (runMode == RunMode.Hold)
             return InputBridge.GetKey(runKey);
         return runToggledOn;
@@ -277,6 +290,11 @@ public class PlayerMove : MonoBehaviour
         }
         else
         {
+            // Reset run states when unfreezing to prevent auto-run
+            runToggledOn = false;
+            runKeyHeld = false;
+            runKeyHeldTime = 0f;
+            
             // If we unfreeze while already moving, force walking state back on.
             if (isMoving && animator != null)
             {
@@ -419,7 +437,30 @@ public class PlayerMove : MonoBehaviour
         {
             // Keep moving, but clamp step to remaining distance to avoid end-point jitter/overshoot.
             float step = Mathf.Min(speed * Time.deltaTime, move.magnitude);
-            controller.Move(move.normalized * step);
+            Vector3 moveVec = move.normalized * step;
+            controller.Move(moveVec);
+            
+            // Debug: Log if not moving as expected (possible collision)
+            if (enableDebugLogs && move.magnitude > 0.01f)
+            {
+                float actualMove = (transform.position - (targetPosition - move)).magnitude;
+                if (controller.velocity.magnitude < 0.01f && actualMove > 0.05f)
+                {
+                    Debug.LogWarning("Player blocked! Pos: " + transform.position);
+                    
+                    // Check wider radius for ALL colliders
+                    Collider[] allColliders = Physics.OverlapSphere(transform.position, 2f);
+                    
+                    Debug.LogWarning("Total colliders found: " + allColliders.Length);
+                    foreach (var hit in allColliders)
+                    {
+                        Rigidbody rb = hit.attachedRigidbody;
+                        bool isTrigger = hit.isTrigger;
+                        string type = hit.GetType().Name;
+                        Debug.LogWarning("BLOCKER: " + hit.name + " Type=" + type + " Trigger=" + isTrigger + " Layer=" + LayerMask.LayerToName(hit.gameObject.layer));
+                    }
+                }
+            }
         }
     }
 

@@ -30,6 +30,7 @@ public class GhostAI : MonoBehaviour
     private float chaseTime = 0f;
     private int deathPhase = 0; // 0=waiting, 1=first prompt, 2=second prompt, 3=waiting for fade
     private bool chaseAnimPausedByUI = false;
+    public bool isFirstSpawn = false;
     
     void Start()
     {
@@ -43,10 +44,35 @@ public class GhostAI : MonoBehaviour
         if (animator != null)
             animator.SetBool("isChasing", true);
         
-        // Original spawn: in FRONT of player
+        // Spawn logic: first spawn = in front, respawns = behind player
         if (player != null)
         {
-            Vector3 spawnPos = player.position + new Vector3(Random.Range(-10f, 10f), 0, Random.Range(8f, 15f));
+            Vector3 spawnPos;
+            
+            if (isFirstSpawn)
+            {
+                // First spawn: in FRONT of player (original behavior)
+                spawnPos = player.position + new Vector3(Random.Range(-10f, 10f), 0, Random.Range(8f, 15f));
+            }
+            else
+            {
+                // Respawn: BEHIND player (opposite to facing direction)
+                int playerDir = 1;
+                if (PlayerMove.Instance != null)
+                    playerDir = PlayerMove.Instance.LastFacingDirection;
+                
+                Vector3 behindOffset = Vector3.zero;
+                switch (playerDir)
+                {
+                    case 1: behindOffset = new Vector3(0, 0, Random.Range(8f, 15f)); break;
+                    case 2: behindOffset = new Vector3(0, 0, Random.Range(-15f, -8f)); break;
+                    case 3: behindOffset = new Vector3(Random.Range(8f, 15f), 0, 0); break;
+                    case 4: behindOffset = new Vector3(Random.Range(-15f, -8f), 0, 0); break;
+                    default: behindOffset = new Vector3(0, 0, Random.Range(8f, 15f)); break;
+                }
+                spawnPos = player.position + behindOffset;
+            }
+            
             spawnPos.y = player.position.y + heightOffset;
             transform.position = spawnPos;
         }

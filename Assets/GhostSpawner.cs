@@ -76,13 +76,20 @@ public class GhostSpawner : MonoBehaviour
         }
     }
     
-    void SpawnGhost()
+void SpawnGhost()
     {
         if (ghostPrefab != null)
         {
             currentGhost = Instantiate(ghostPrefab);
             spawnTimer = 0f;
             SetNextSpawnTime();
+            
+            // Flag for first spawn (front) vs respawn (behind)
+            GhostAI ghostAI = currentGhost.GetComponent<GhostAI>();
+            if (ghostAI != null)
+            {
+                ghostAI.isFirstSpawn = !firstSpawnDone;
+            }
             
             // Trigger ghost prompt
             if (GhostPromptManager.Instance != null)

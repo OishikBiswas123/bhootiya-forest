@@ -719,9 +719,12 @@ public void FadeDarkScreenAndRespawn()
         StartCoroutine(TeleportHomeOutdoorAfterVictory());
     }
 
-    IEnumerator TeleportHomeOutdoorAfterVictory()
+IEnumerator TeleportHomeOutdoorAfterVictory()
     {
         UIManager.Instance?.CloseDialogue();
+        
+        // Restore BGM before teleporting
+        RestoreBgmAfterEndPanel();
 
         GameObject player = GameObject.FindGameObjectWithTag("Player");
         if (player == null || homeOutdoorSpawnPoint == null)

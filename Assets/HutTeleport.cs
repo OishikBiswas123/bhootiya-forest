@@ -259,9 +259,10 @@ public class HutTeleport : MonoBehaviour
         }
     }
 
-    public void StartForestLandingOnly()
+public void StartForestLandingOnly()
     {
         if (destinationPoint == null || player == null) return;
+        isTeleporting = true;
         StartCoroutine(DoTeleportInOnly());
     }
     
@@ -351,7 +352,7 @@ public class HutTeleport : MonoBehaviour
         nextInteractAllowedTime = Time.time + 0.25f;
     }
     
-    void OnYesUseKey()
+void OnYesUseKey()
     {
         nextInteractAllowedTime = Time.time + interactCooldownAfterChoice;
 
@@ -395,8 +396,10 @@ public class HutTeleport : MonoBehaviour
         return null;
     }
     
-    IEnumerator DoVictoryTeleport(Vector3 targetPos)
+IEnumerator DoVictoryTeleport(Vector3 targetPos)
     {
+        isTeleporting = true;
+        
         // Freeze player
         if (GameManager.Instance != null)
             GameManager.Instance.StartInteraction();
