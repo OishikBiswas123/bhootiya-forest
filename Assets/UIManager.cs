@@ -166,21 +166,35 @@ private float inputBufferTime = 0.2f;
                 return;
             }
             
-            // Handle dialogue advance (for prompts with hasMore=true, like key found message)
+            // Handle dialogue advance - only for KEY FOUND specifically (2-line sequence)
             if (dialoguePanel != null && dialoguePanel.activeSelf && hasMoreDialogue)
             {
                 if (InputBridge.GetKeyDown(KeyCode.X))
                 {
-                    // Check if this is the key found message - show second line first
+                    // For key found 2-line sequence
                     if (dialogueText != null && dialogueText.text == "You found the KEY!")
                     {
                         dialogueText.text = "Please return to the hut to escape the forest.";
                         PlayPromptClickSfx();
+                        return;
                     }
-                    else
+                    // Second click on "Please return..." - close dialogue
+                    else if (dialogueText != null && dialogueText.text == "Please return to the hut to escape the forest.")
                     {
                         CloseDialogue();
+                        return;
                     }
+                    // For all other dialogues with hasMore=true, do nothing - return
+                    return;
+                }
+            }
+            
+            // Handle simple dialogue close (no choices, no hasMore) - close on X
+            if (dialoguePanel != null && dialoguePanel.activeSelf && !hasMoreDialogue && !showingChoices)
+            {
+                if (InputBridge.GetKeyDown(KeyCode.X))
+                {
+                    CloseDialogue();
                     return;
                 }
             }
