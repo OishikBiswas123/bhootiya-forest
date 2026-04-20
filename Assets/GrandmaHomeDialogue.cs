@@ -84,6 +84,9 @@ public class GrandmaHomeDialogue : MonoBehaviour
     void Update()
     {
         if (player == null) return;
+        
+        // Skip if Game Info panel is showing
+        if (UIManager.Instance != null && UIManager.Instance.IsGameInfoActive()) return;
 
         float distance = Vector3.Distance(transform.position, player.position);
         // Allow continuing an already-started dialogue even if player is not near grandma
@@ -105,8 +108,6 @@ public class GrandmaHomeDialogue : MonoBehaviour
             return;
         }
 
-        Debug.Log("Grandma HandleInteraction: isInteracting=" + isInteracting + " lineIndex=" + lineIndex);
-
         if (!isInteracting)
         {
             StartDialogue();
@@ -120,12 +121,10 @@ public class GrandmaHomeDialogue : MonoBehaviour
 
         if (usingOutsideFlow)
         {
-            Debug.Log("Grandma: HandleOutsideFlowAdvance");
             HandleOutsideFlowAdvance();
         }
         else
         {
-            Debug.Log("Grandma: HandleUpstairsFlowAdvance lineIndex=" + lineIndex);
             HandleUpstairsFlowAdvance();
         }
     }
@@ -464,7 +463,6 @@ void OnMoodGreat()
     
     void OnUIManagerDialogueClosed()
     {
-        Debug.Log("Grandma: OnUIManagerDialogueClosed called");
         // Dialogue was closed externally - end our interaction
         if (isInteracting)
         {
@@ -474,11 +472,9 @@ void OnMoodGreat()
     
     void OnUIManagerDialogueAdvance()
     {
-        Debug.Log("Grandma: OnUIManagerDialogueAdvance called, isInteracting=" + isInteracting);
         // Player pressed X to advance dialogue
         if (isInteracting)
         {
-            Debug.Log("Grandma: calling advance function");
             if (usingOutsideFlow)
             {
                 HandleOutsideFlowAdvance();

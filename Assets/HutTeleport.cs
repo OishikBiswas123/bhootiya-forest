@@ -50,10 +50,13 @@ public class HutTeleport : MonoBehaviour
         }
     }
     
-    void Update()
+void Update()
     {
         if (player == null) return;
         if (isTeleporting) return;
+        
+        // Skip if Game Info panel is showing
+        if (UIManager.Instance != null && UIManager.Instance.IsGameInfoActive()) return;
         
         // Handle forest intro prompts
         if (hutID == 1 && forestPromptIndex >= 0)

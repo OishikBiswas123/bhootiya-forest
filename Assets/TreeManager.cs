@@ -66,6 +66,9 @@ void Update()
     {
         if (player == null || trees.Count == 0) return;
         
+        // Skip if Game Info panel is showing
+        if (UIManager.Instance != null && UIManager.Instance.IsGameInfoActive()) return;
+        
         // Handle wait timer for "..." delay (using Update instead of Invoke for better control)
         if (treePhase == 3 && waitTime > 0)
         {
@@ -261,7 +264,5 @@ void Update()
         if (!revealKeyTreeInConsole) return;
         if (keyTreeIndex < 0 || keyTreeIndex >= trees.Count) return;
         if (trees[keyTreeIndex] == null) return;
-
-        Debug.LogWarning("TEST: Key is in tree [" + keyTreeIndex + "] " + trees[keyTreeIndex].name);
     }
 }

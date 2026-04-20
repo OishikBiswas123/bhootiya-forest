@@ -63,6 +63,9 @@ public class HomeGuideNPCDialogue : MonoBehaviour
     void Update()
     {
         if (player == null) return;
+        
+        // Skip if Game Info panel is showing
+        if (UIManager.Instance != null && UIManager.Instance.IsGameInfoActive()) return;
 
         float distance = Vector3.Distance(transform.position, player.position);
         if (distance > interactionDistance) return;

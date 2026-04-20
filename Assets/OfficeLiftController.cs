@@ -60,6 +60,9 @@ public class OfficeLiftController : MonoBehaviour
     void Update()
     {
         if (player == null || isProcessing) return;
+        
+        // Skip if Game Info panel is showing
+        if (UIManager.Instance != null && UIManager.Instance.IsGameInfoActive()) return;
 
         float distance = Vector3.Distance(transform.position, player.position);
         playerInRange = distance <= interactionDistance;
