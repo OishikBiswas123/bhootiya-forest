@@ -436,6 +436,14 @@ public void OpenPauseMenu()
 
         SetMainButtonsVisible(!hideMainButtons);
         
+        // Show D-pad and X when choice panel is open (for lift, NPC, tree choices)
+        if (UIManager.Instance != null && 
+            UIManager.Instance.choicePanel != null && 
+            UIManager.Instance.choicePanel.activeSelf)
+        {
+            ShowMobileButtonsOnly();
+        }
+        
         // For City: hide mobile buttons (dpad, run, x) but keep pause/settings visible
         if (isCityPaused)
         {
