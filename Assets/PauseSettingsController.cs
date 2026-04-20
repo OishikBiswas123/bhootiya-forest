@@ -169,6 +169,7 @@ public void Pause()
                 pauseMenuPanel.SetActive(false);
 
             SetMainButtonsVisible(true);
+            ShowMobileButtonsOnly(); // Restore X button
             
             // Restore Game Info button if game is still paused (City fix)
             if (gameInfoButton != null && isPaused)
@@ -397,6 +398,10 @@ public void OpenPauseMenu()
 
     void UpdateMainButtonsVisibilityByUIState()
     {
+        // Skip button visibility changes when in layout edit mode
+        if (LayoutEditorManager.Instance != null && LayoutEditorManager.Instance.IsEditMode())
+            return;
+        
         if (settingsPanel != null && settingsPanel.activeSelf)
         {
             SetMainButtonsVisible(false);

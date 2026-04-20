@@ -100,6 +100,15 @@ public class LayoutEditorManager : MonoBehaviour
         SetEditMode(false);
         if (settingsPanel != null) settingsPanel.SetActive(true);
         SetItemButtonsInteractable(true);
+        
+        // Hide gameInfo and mobile buttons since settings will be open
+        var pauseCtrl = FindObjectOfType<PauseSettingsController>();
+        if (pauseCtrl != null)
+        {
+            pauseCtrl.HideMobileButtonsOnly();
+            if (pauseCtrl.gameInfoButton != null)
+                pauseCtrl.gameInfoButton.SetActive(false);
+        }
     }
 
     public void ResetToDefault()
