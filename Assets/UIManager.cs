@@ -166,36 +166,34 @@ private float inputBufferTime = 0.2f;
                 return;
             }
             
-            // Handle dialogue advance - only for KEY FOUND specifically (2-line sequence)
-            if (dialoguePanel != null && dialoguePanel.activeSelf && hasMoreDialogue)
+            // Handle KEY FOUND special 2-line sequence only
+            if (dialoguePanel != null && dialoguePanel.activeSelf && 
+                dialogueText != null && dialogueText.text == "You found the KEY!")
             {
                 if (InputBridge.GetKeyDown(KeyCode.X))
                 {
-                    // For key found 2-line sequence
-                    if (dialogueText != null && dialogueText.text == "You found the KEY!")
-                    {
-                        dialogueText.text = "Please return to the hut to escape the forest.";
-                        PlayPromptClickSfx();
-                        return;
-                    }
-                    // Second click on "Please return..." - close dialogue AND unfreeze game
-                    else if (dialogueText != null && dialogueText.text == "Please return to the hut to escape the forest.")
-                    {
-                        CloseDialogue();
-                        // Unfreeze game (was frozen in KeyFoundManager)
-                        if (GameManager.Instance != null)
-                            GameManager.Instance.EndInteraction();
-                        // Re-enable ghosts
-                        GhostAI[] ghosts = FindObjectsByType<GhostAI>(FindObjectsSortMode.None);
-                        foreach (GhostAI ghost in ghosts)
-                        {
-                            ghost.enabled = true;
-                        }
-                        return;
-                    }
-                    // For all other dialogues with hasMore=true, do nothing - return
-                    return;
+                    dialogueText.text = "Please return to the hut to escape the forest.";
+                    PlayPromptClickSfx();
                 }
+                return;
+            }
+            
+            // Second line of key found - close dialogue and unfreeze game
+            if (dialoguePanel != null && dialoguePanel.activeSelf && 
+                dialogueText != null && dialogueText.text == "Please return to the hut to escape the forest.")
+            {
+                if (InputBridge.GetKeyDown(KeyCode.X))
+                {
+                    CloseDialogue();
+                    if (GameManager.Instance != null)
+                        GameManager.Instance.EndInteraction();
+                    GhostAI[] ghosts = FindObjectsByType<GhostAI>(FindObjectsSortMode.None);
+                    foreach (GhostAI ghost in ghosts)
+                    {
+                        ghost.enabled = true;
+                    }
+                }
+                return;
             }
             
             // Handle simple dialogue close (no choices, no hasMore) - close on X
