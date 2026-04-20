@@ -50,13 +50,10 @@ public class HutTeleport : MonoBehaviour
         }
     }
     
-void Update()
+    void Update()
     {
         if (player == null) return;
         if (isTeleporting) return;
-        
-        // Skip if Game Info panel is showing
-        if (UIManager.Instance != null && UIManager.Instance.IsGameInfoActive()) return;
         
         // Handle forest intro prompts
         if (hutID == 1 && forestPromptIndex >= 0)
@@ -128,7 +125,7 @@ void Update()
         }
     }
     
-void ShowNextPrompt()
+    void ShowNextPrompt()
     {
         if (forestPromptIndex < forestIntroPrompts.Length && UIManager.Instance != null)
         {
@@ -262,10 +259,9 @@ void ShowNextPrompt()
         }
     }
 
-public void StartForestLandingOnly()
+    public void StartForestLandingOnly()
     {
         if (destinationPoint == null || player == null) return;
-        isTeleporting = true;
         StartCoroutine(DoTeleportInOnly());
     }
     
@@ -305,11 +301,11 @@ public void StartForestLandingOnly()
                 GameManager.Instance.StartInteraction();
             }
             
-// Start forest intro prompts
+            // Start forest intro prompts
             forestPromptIndex = 0;
             if (UIManager.Instance != null)
             {
-                UIManager.Instance.ShowDialogue(forestIntroPrompts[0], false, true);
+                UIManager.Instance.ShowDialogue(forestIntroPrompts[0], false);
             }
             forestPromptInputUnlockTime = Time.time + Mathf.Max(0f, firstForestPromptLockSeconds);
         }
@@ -347,45 +343,7 @@ public void StartForestLandingOnly()
         forestPromptIndex = 0;
         if (UIManager.Instance != null)
         {
-            UIManager.Instance.ShowDialogue(forestIntroPrompts[0], false, true);
-        }
-            forestPromptInputUnlockTime = Time.time + Mathf.Max(0f, firstForestPromptLockSeconds);
-        }
-
-        isTeleporting = false;
-        nextInteractAllowedTime = Time.time + 0.25f;
-    }
-
-    IEnumerator DoTeleportInOnly()
-    {
-        isTeleporting = true;
-        nextInteractAllowedTime = Time.time + 10f;
-        CancelInvoke("ShowNextPrompt");
-
-        if (UIManager.Instance != null)
-        {
-            UIManager.Instance.CloseDialogue();
-        }
-
-        TeleportEffect effect = player.GetComponent<TeleportEffect>();
-        if (effect == null)
-        {
-            effect = player.gameObject.AddComponent<TeleportEffect>();
-        }
-
-        yield return effect.TeleportIn(destinationPoint.position, () => { });
-
-        Log("Teleported (landing only) to: " + destinationPoint.name);
-
-        if (GameManager.Instance != null)
-        {
-            GameManager.Instance.StartInteraction();
-        }
-
-        forestPromptIndex = 0;
-        if (UIManager.Instance != null)
-        {
-            UIManager.Instance.ShowDialogue(forestIntroPrompts[0], false, true);
+            UIManager.Instance.ShowDialogue(forestIntroPrompts[0], false);
         }
         forestPromptInputUnlockTime = Time.time + Mathf.Max(0f, firstForestPromptLockSeconds);
 
@@ -393,7 +351,7 @@ public void StartForestLandingOnly()
         nextInteractAllowedTime = Time.time + 0.25f;
     }
     
-void OnYesUseKey()
+    void OnYesUseKey()
     {
         nextInteractAllowedTime = Time.time + interactCooldownAfterChoice;
 
@@ -437,10 +395,8 @@ void OnYesUseKey()
         return null;
     }
     
-IEnumerator DoVictoryTeleport(Vector3 targetPos)
+    IEnumerator DoVictoryTeleport(Vector3 targetPos)
     {
-        isTeleporting = true;
-        
         // Freeze player
         if (GameManager.Instance != null)
             GameManager.Instance.StartInteraction();
