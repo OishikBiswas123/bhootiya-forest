@@ -119,8 +119,8 @@ public class OldLadyDialogue : MonoBehaviour
         
         if (currentLineIndex < dialogueLines.Length)
         {
-            // Show next line - check if it's the last one
-            bool hasMore = (currentLineIndex < dialogueLines.Length - 1);
+            // Always show arrow so player can see this line and press X to advance
+            bool hasMore = true;
             if (UIManager.Instance != null)
             {
                 UIManager.Instance.ShowDialogue(dialogueLines[currentLineIndex], false, hasMore);

@@ -72,11 +72,10 @@ public class LockedHut : MonoBehaviour
         if (GameManager.Instance != null)
             GameManager.Instance.StartInteraction();
         
+        // Show with hasMore=true so arrow shows and X works with delay to prevent accidental close
         if (UIManager.Instance != null)
         {
             UIManager.Instance.ShowDialogue(lockedMessage, false, true);
-            UIManager.Instance.onDialogueClosed += OnUIManagerDialogueClosed;
-            UIManager.Instance.onDialogueAdvance += OnUIManagerDialogueAdvance;
         }
     }
     
@@ -86,32 +85,12 @@ public class LockedHut : MonoBehaviour
         
         if (UIManager.Instance != null)
         {
-            UIManager.Instance.onDialogueClosed -= OnUIManagerDialogueClosed;
-            UIManager.Instance.onDialogueAdvance -= OnUIManagerDialogueAdvance;
             UIManager.Instance.CloseDialogue();
         }
         
         // Unfreeze player
         if (GameManager.Instance != null)
             GameManager.Instance.EndInteraction();
-    }
-    
-    void OnUIManagerDialogueClosed()
-    {
-        Debug.Log("LockedHut: OnUIManagerDialogueClosed called");
-        if (isShowingMessage)
-        {
-            HidePrompt();
-        }
-    }
-    
-    void OnUIManagerDialogueAdvance()
-    {
-        Debug.Log("LockedHut: OnUIManagerDialogueAdvance called");
-        if (isShowingMessage)
-        {
-            HidePrompt();
-        }
     }
     
     void OnDrawGizmosSelected()

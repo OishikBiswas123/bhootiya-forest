@@ -118,7 +118,7 @@ public class DoctorNPCDialogue : MonoBehaviour
 
         if (currentLineIndex < dialogueLines.Length)
         {
-            bool hasMore = currentLineIndex < dialogueLines.Length - 1;
+            bool hasMore = true;
             if (UIManager.Instance != null)
             {
                 UIManager.Instance.ShowDialogue(dialogueLines[currentLineIndex], false, hasMore);

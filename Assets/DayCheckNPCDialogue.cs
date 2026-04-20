@@ -51,8 +51,8 @@ public class DayCheckNPCDialogue : MonoBehaviour
 
         float distance = Vector3.Distance(transform.position, player.position);
         if (distance > interactionDistance) return;
-
-if (!InputBridge.GetKeyDown(interactKey)) return;
+        
+        if (!InputBridge.GetKeyDown(interactKey)) return;
         
         if (Time.time - lastInputTime < inputCooldown) return;
         lastInputTime = Time.time;
@@ -90,12 +90,6 @@ if (!InputBridge.GetKeyDown(interactKey)) return;
 
         UIManager.Instance?.CloseDialogue();
         GameManager.Instance?.StartInteraction();
-        
-        if (UIManager.Instance != null)
-        {
-            UIManager.Instance.onDialogueClosed += OnUIManagerDialogueClosed;
-            UIManager.Instance.onDialogueAdvance += OnUIManagerDialogueAdvance;
-        }
         
         UIManager.Instance?.ShowDialogue(greetingLine, false, true);
     }
@@ -137,6 +131,14 @@ if (!InputBridge.GetKeyDown(interactKey)) return;
     {
         waitingForChoice = false;
         waitingToClose = true;
+        
+        // Hide choice panel
+        if (UIManager.Instance != null)
+        {
+            if (UIManager.Instance.choicePanel != null)
+                UIManager.Instance.choicePanel.SetActive(false);
+        }
+        
         UIManager.Instance?.ShowDialogue(reply, false, true);
     }
 
@@ -147,32 +149,8 @@ void EndDialogue()
         waitingForChoice = false;
         waitingToClose = false;
 
-        if (UIManager.Instance != null)
-        {
-            UIManager.Instance.onDialogueClosed -= OnUIManagerDialogueClosed;
-            UIManager.Instance.onDialogueAdvance -= OnUIManagerDialogueAdvance;
-        }
-        
         UIManager.Instance?.CloseDialogue();
         GameManager.Instance?.EndInteraction();
-    }
-    
-    void OnUIManagerDialogueClosed()
-    {
-        Debug.Log("DayCheckNPC: OnUIManagerDialogueClosed called");
-        if (isInteracting)
-        {
-            EndDialogue();
-        }
-    }
-    
-    void OnUIManagerDialogueAdvance()
-    {
-        Debug.Log("DayCheckNPC: OnUIManagerDialogueAdvance called");
-        if (isInteracting)
-        {
-            EndDialogue();
-        }
     }
     
     void OnDrawGizmosSelected()

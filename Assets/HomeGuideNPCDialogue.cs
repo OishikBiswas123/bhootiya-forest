@@ -155,6 +155,7 @@ public class HomeGuideNPCDialogue : MonoBehaviour
     void ShowChoices()
     {
         showingChoices = true;
+        
         if (UIManager.Instance == null) return;
 
         UIManager.Instance.ShowDialogueWithChoices(
@@ -191,7 +192,14 @@ public class HomeGuideNPCDialogue : MonoBehaviour
                 break;
         }
 
-        UIManager.Instance?.CloseDialogue();
+        // Close choice panel
+        if (UIManager.Instance != null)
+        {
+            if (UIManager.Instance.choicePanel != null)
+                UIManager.Instance.choicePanel.SetActive(false);
+        }
+
+        // Show the reply
         UIManager.Instance?.ShowDialogue(reply, false, true);
     }
 

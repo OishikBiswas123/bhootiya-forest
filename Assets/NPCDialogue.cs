@@ -184,9 +184,8 @@ public class NPCDialogue : MonoBehaviour
         
         if (currentLineIndex < introLines.Length)
         {
-            // Show next intro line; if this is last line, wait one more X before showing choices.
             bool isLastIntroLine = (currentLineIndex == introLines.Length - 1);
-            bool hasMore = isLastIntroLine ? true : (currentLineIndex < introLines.Length - 1);
+            bool hasMore = true;
             if (UIManager.Instance != null)
             {
                 UIManager.Instance.ShowDialogue(introLines[currentLineIndex], false, hasMore);
@@ -250,7 +249,9 @@ public class NPCDialogue : MonoBehaviour
             // Show first line of the answer
             if (currentAnswerLines != null && currentAnswerLines.Length > 0 && UIManager.Instance != null)
             {
-                UIManager.Instance.CloseDialogue();
+                if (UIManager.Instance.choicePanel != null)
+                    UIManager.Instance.choicePanel.SetActive(false);
+                
                 bool hasMore = currentAnswerLines.Length > 1;
                 UIManager.Instance.ShowDialogue(currentAnswerLines[0], false, hasMore);
             }
@@ -263,8 +264,7 @@ public class NPCDialogue : MonoBehaviour
         
         if (currentAnswerLines != null && currentAnswerLineIndex < currentAnswerLines.Length)
         {
-            // Show next line of the answer - check if it's the last one
-            bool hasMore = (currentAnswerLineIndex < currentAnswerLines.Length - 1);
+            bool hasMore = true;
             if (UIManager.Instance != null)
             {
                 UIManager.Instance.ShowDialogue(currentAnswerLines[currentAnswerLineIndex], false, hasMore);
