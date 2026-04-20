@@ -105,6 +105,8 @@ public class GrandmaHomeDialogue : MonoBehaviour
             return;
         }
 
+        Debug.Log("Grandma HandleInteraction: isInteracting=" + isInteracting + " lineIndex=" + lineIndex);
+
         if (!isInteracting)
         {
             StartDialogue();
@@ -118,10 +120,12 @@ public class GrandmaHomeDialogue : MonoBehaviour
 
         if (usingOutsideFlow)
         {
+            Debug.Log("Grandma: HandleOutsideFlowAdvance");
             HandleOutsideFlowAdvance();
         }
         else
         {
+            Debug.Log("Grandma: HandleUpstairsFlowAdvance lineIndex=" + lineIndex);
             HandleUpstairsFlowAdvance();
         }
     }
@@ -138,6 +142,13 @@ public class GrandmaHomeDialogue : MonoBehaviour
         moodChoiceShown = false;
         dayQuestionShown = false;
         outsideFollowupIndex = -1;
+        
+        // Subscribe to dialogue callbacks
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.onDialogueClosed += OnUIManagerDialogueClosed;
+            UIManager.Instance.onDialogueAdvance += OnUIManagerDialogueAdvance;
+        }
 
         GrandmaDialogueSource src = GrandmaDialogueContext.Consume();
         if (src != GrandmaDialogueSource.None)
@@ -165,7 +176,7 @@ public class GrandmaHomeDialogue : MonoBehaviour
         {
             if (activeSourceIntroCompleted)
             {
-                UIManager.Instance?.ShowDialogue(outsideRepeatLine, false, false);
+                UIManager.Instance?.ShowDialogue(outsideRepeatLine, false, true);
             }
             else
             {
@@ -176,7 +187,7 @@ public class GrandmaHomeDialogue : MonoBehaviour
         {
             if (activeSourceIntroCompleted)
             {
-                UIManager.Instance?.ShowDialogue(upstairsRepeatLine, false, false);
+                UIManager.Instance?.ShowDialogue(upstairsRepeatLine, false, true);
             }
             else
             {
@@ -266,6 +277,7 @@ public class GrandmaHomeDialogue : MonoBehaviour
         }
 
         bool hasMore = outsideFollowupIndex < outsideFollowupLines.Length - 1;
+        hasMore = true;
         UIManager.Instance?.ShowDialogue(outsideFollowupLines[outsideFollowupIndex], false, hasMore);
     }
 
@@ -276,18 +288,18 @@ public class GrandmaHomeDialogue : MonoBehaviour
         UIManager.Instance?.SetChoiceButtonTexts("Great", "Bad");
     }
 
-    void OnMoodGreat()
+void OnMoodGreat()
     {
         waitingForMoodChoice = false;
         waitingAfterMoodResponse = true;
-        UIManager.Instance?.ShowDialogue(greatResponse, false, false);
+        UIManager.Instance?.ShowDialogue(greatResponse, false, true);
     }
-
+    
     void OnMoodBad()
     {
         waitingForMoodChoice = false;
         waitingAfterMoodResponse = true;
-        UIManager.Instance?.ShowDialogue(badResponse, false, false);
+        UIManager.Instance?.ShowDialogue(badResponse, false, true);
     }
 
     void HandleUpstairsFlowAdvance()
@@ -319,7 +331,9 @@ public class GrandmaHomeDialogue : MonoBehaviour
             return;
         }
 
+        // Always show arrow so player can see this line and press X to advance
         bool hasMore = lineIndex < upstairsLines.Length - 1;
+        hasMore = true;
         UIManager.Instance?.ShowDialogue(upstairsLines[lineIndex], false, hasMore);
     }
     
@@ -425,6 +439,7 @@ public class GrandmaHomeDialogue : MonoBehaviour
         }
 
         bool hasMore = lineIndex < upstairsLines.Length - 1;
+        hasMore = true;
         UIManager.Instance?.ShowDialogue(upstairsLines[lineIndex], false, hasMore);
     }
 
@@ -438,12 +453,41 @@ public class GrandmaHomeDialogue : MonoBehaviour
         dayQuestionShown = false;
         outsideFollowupIndex = -1;
         startFromGateStop = false;
-        useGateAutoWalkForThisConversation = false;
-        pendingGateAutoWalk = false;
-        isAutoWalking = false;
-
-        UIManager.Instance?.CloseDialogue();
-        GameManager.Instance?.EndInteraction();
+        
+        // Unsubscribe from dialogue callbacks
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.onDialogueClosed -= OnUIManagerDialogueClosed;
+            UIManager.Instance.onDialogueAdvance -= OnUIManagerDialogueAdvance;
+        }
+    }
+    
+    void OnUIManagerDialogueClosed()
+    {
+        Debug.Log("Grandma: OnUIManagerDialogueClosed called");
+        // Dialogue was closed externally - end our interaction
+        if (isInteracting)
+        {
+            EndDialogue();
+        }
+    }
+    
+    void OnUIManagerDialogueAdvance()
+    {
+        Debug.Log("Grandma: OnUIManagerDialogueAdvance called, isInteracting=" + isInteracting);
+        // Player pressed X to advance dialogue
+        if (isInteracting)
+        {
+            Debug.Log("Grandma: calling advance function");
+            if (usingOutsideFlow)
+            {
+                HandleOutsideFlowAdvance();
+            }
+            else
+            {
+                HandleUpstairsFlowAdvance();
+            }
+        }
     }
 
     void OnDrawGizmosSelected()

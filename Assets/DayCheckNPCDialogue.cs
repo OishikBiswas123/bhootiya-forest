@@ -87,6 +87,13 @@ if (!InputBridge.GetKeyDown(interactKey)) return;
 
         UIManager.Instance?.CloseDialogue();
         GameManager.Instance?.StartInteraction();
+        
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.onDialogueClosed += OnUIManagerDialogueClosed;
+            UIManager.Instance.onDialogueAdvance += OnUIManagerDialogueAdvance;
+        }
+        
         UIManager.Instance?.ShowDialogue(greetingLine, false, true);
     }
     
@@ -127,20 +134,44 @@ if (!InputBridge.GetKeyDown(interactKey)) return;
     {
         waitingForChoice = false;
         waitingToClose = true;
-        UIManager.Instance?.ShowDialogue(reply, false, false);
+        UIManager.Instance?.ShowDialogue(reply, false, true);
     }
 
-    void EndDialogue()
+void EndDialogue()
     {
         isInteracting = false;
         waitingToShowChoices = false;
         waitingForChoice = false;
         waitingToClose = false;
 
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.onDialogueClosed -= OnUIManagerDialogueClosed;
+            UIManager.Instance.onDialogueAdvance -= OnUIManagerDialogueAdvance;
+        }
+        
         UIManager.Instance?.CloseDialogue();
         GameManager.Instance?.EndInteraction();
     }
-
+    
+    void OnUIManagerDialogueClosed()
+    {
+        Debug.Log("DayCheckNPC: OnUIManagerDialogueClosed called");
+        if (isInteracting)
+        {
+            EndDialogue();
+        }
+    }
+    
+    void OnUIManagerDialogueAdvance()
+    {
+        Debug.Log("DayCheckNPC: OnUIManagerDialogueAdvance called");
+        if (isInteracting)
+        {
+            EndDialogue();
+        }
+    }
+    
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.cyan;

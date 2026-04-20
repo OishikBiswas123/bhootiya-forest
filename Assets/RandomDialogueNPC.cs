@@ -123,6 +123,8 @@ public class RandomDialogueNPC : MonoBehaviour
         if (UIManager.Instance != null)
         {
             UIManager.Instance.CloseDialogue();
+            UIManager.Instance.onDialogueClosed += OnUIManagerDialogueClosed;
+            UIManager.Instance.onDialogueAdvance += OnUIManagerDialogueAdvance;
         }
         
         // Freeze player
@@ -167,7 +169,7 @@ public class RandomDialogueNPC : MonoBehaviour
             {
                 if (UIManager.Instance != null)
                 {
-                    UIManager.Instance.ShowDialogue(allDialogues[currentDialogueIndex][currentLineIndex], false, false);
+                    UIManager.Instance.ShowDialogue(allDialogues[currentDialogueIndex][currentLineIndex], false, true);
                 }
             }
             else
@@ -188,6 +190,13 @@ public class RandomDialogueNPC : MonoBehaviour
         currentLineIndex = 0;
         dialogueStep = 0;
         
+        // Unsubscribe from dialogue callbacks
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.onDialogueClosed -= OnUIManagerDialogueClosed;
+            UIManager.Instance.onDialogueAdvance -= OnUIManagerDialogueAdvance;
+        }
+        
         // Hide dialogue
         if (UIManager.Instance != null)
         {
@@ -198,6 +207,24 @@ public class RandomDialogueNPC : MonoBehaviour
         if (GameManager.Instance != null)
         {
             GameManager.Instance.EndInteraction();
+        }
+    }
+    
+    void OnUIManagerDialogueClosed()
+    {
+        Debug.Log("RandomDialogueNPC: OnUIManagerDialogueClosed called");
+        if (isInteracting)
+        {
+            EndDialogue();
+        }
+    }
+    
+    void OnUIManagerDialogueAdvance()
+    {
+        Debug.Log("RandomDialogueNPC: OnUIManagerDialogueAdvance called");
+        if (isInteracting)
+        {
+            AdvanceDialogue();
         }
     }
     

@@ -6,6 +6,11 @@ public class UIManager : MonoBehaviour
 {
     public static UIManager Instance;
     
+    // Callback for when dialogue is closed (for NPCs to end their dialogue)
+    public System.Action onDialogueClosed;
+    // Callback for when player presses X to advance dialogue (for hasMore=true cases)
+    public System.Action onDialogueAdvance;
+    
     [Header("Dialogue Box")]
     public GameObject dialoguePanel;
     public TextMeshProUGUI dialogueText;
@@ -134,6 +139,8 @@ private float inputBufferTime = 0.2f;
     [Header("Dialogue Advance")]
     public float dialogueAdvanceCooldown = 0.3f;
     private float lastAdvanceTime = 0f;
+    private float dialogueShowTime = 0f; // Time when dialogue was shown - prevents immediate close
+    private float dialogueCloseDelay = 0.3f; // Delay before X can close
     
     [Header("Choice Navigation")]
     public float navHoldDelay = 0.35f;
@@ -204,6 +211,22 @@ private float inputBufferTime = 0.2f;
                     CloseDialogue();
                     return;
                 }
+            }
+            
+            // Handle dialogue with arrow (hasMore=true) - close on X and unfreeze player
+            if (dialoguePanel != null && dialoguePanel.activeSelf && hasMoreDialogue && !showingChoices)
+            {
+                if (InputBridge.GetKeyDown(KeyCode.X))
+                {
+                    // Don't close immediately - give time for dialogue to show
+                    if (Time.time - dialogueShowTime > dialogueCloseDelay)
+                    {
+                        CloseDialogue();
+                        if (GameManager.Instance != null)
+                            GameManager.Instance.EndInteraction();
+                    }
+                }
+                return;
             }
             
             // No active UI, exit
@@ -611,6 +634,9 @@ private float inputBufferTime = 0.2f;
         {
             continueArrow.SetActive(hasMore);
         }
+        
+        // Reset timing to prevent immediate close on first X press
+        dialogueShowTime = Time.time;
     }
     
     // 2-button version for Trees - uses VERTICAL navigation (Up/Down arrows)
@@ -962,6 +988,9 @@ public void CloseDialogue()
         
         // Clear cooldown so X can work normally
         inputBuffer = 0f;
+        
+        // Notify listeners that dialogue was closed
+        onDialogueClosed?.Invoke();
     }
     
     void OnYesButtonClick()
