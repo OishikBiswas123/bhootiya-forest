@@ -171,7 +171,16 @@ private float inputBufferTime = 0.2f;
             {
                 if (InputBridge.GetKeyDown(KeyCode.X))
                 {
-                    CloseDialogue();
+                    // Check if this is the key found message - show second line first
+                    if (dialogueText != null && dialogueText.text == "You found the KEY!")
+                    {
+                        dialogueText.text = "Please return to the hut to escape the forest.";
+                        PlayPromptClickSfx();
+                    }
+                    else
+                    {
+                        CloseDialogue();
+                    }
                     return;
                 }
             }
