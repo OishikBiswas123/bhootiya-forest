@@ -77,8 +77,21 @@ public class LayoutEditorManager : MonoBehaviour
 
     public void EnterEditMode()
     {
+        ShowAllLayoutItems();
         SetEditMode(true);
         SetItemButtonsInteractable(false);
+    }
+    
+    void ShowAllLayoutItems()
+    {
+        if (items == null) return;
+        foreach (var it in items)
+        {
+            if (it != null && it.rect != null && it.rect.gameObject != null)
+            {
+                it.rect.gameObject.SetActive(true);
+            }
+        }
     }
 
     public void ExitEditMode()
