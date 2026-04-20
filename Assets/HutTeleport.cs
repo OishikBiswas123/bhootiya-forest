@@ -128,11 +128,11 @@ void Update()
         }
     }
     
-    void ShowNextPrompt()
+void ShowNextPrompt()
     {
         if (forestPromptIndex < forestIntroPrompts.Length && UIManager.Instance != null)
         {
-            bool hasMore = (forestPromptIndex < forestIntroPrompts.Length - 1);
+            bool hasMore = true;
             UIManager.Instance.ShowDialogue(forestIntroPrompts[forestPromptIndex], false, hasMore);
         }
     }
@@ -305,11 +305,11 @@ public void StartForestLandingOnly()
                 GameManager.Instance.StartInteraction();
             }
             
-            // Start forest intro prompts
+// Start forest intro prompts
             forestPromptIndex = 0;
             if (UIManager.Instance != null)
             {
-                UIManager.Instance.ShowDialogue(forestIntroPrompts[0], false);
+                UIManager.Instance.ShowDialogue(forestIntroPrompts[0], false, true);
             }
             forestPromptInputUnlockTime = Time.time + Mathf.Max(0f, firstForestPromptLockSeconds);
         }
@@ -347,7 +347,45 @@ public void StartForestLandingOnly()
         forestPromptIndex = 0;
         if (UIManager.Instance != null)
         {
-            UIManager.Instance.ShowDialogue(forestIntroPrompts[0], false);
+            UIManager.Instance.ShowDialogue(forestIntroPrompts[0], false, true);
+        }
+            forestPromptInputUnlockTime = Time.time + Mathf.Max(0f, firstForestPromptLockSeconds);
+        }
+
+        isTeleporting = false;
+        nextInteractAllowedTime = Time.time + 0.25f;
+    }
+
+    IEnumerator DoTeleportInOnly()
+    {
+        isTeleporting = true;
+        nextInteractAllowedTime = Time.time + 10f;
+        CancelInvoke("ShowNextPrompt");
+
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.CloseDialogue();
+        }
+
+        TeleportEffect effect = player.GetComponent<TeleportEffect>();
+        if (effect == null)
+        {
+            effect = player.gameObject.AddComponent<TeleportEffect>();
+        }
+
+        yield return effect.TeleportIn(destinationPoint.position, () => { });
+
+        Log("Teleported (landing only) to: " + destinationPoint.name);
+
+        if (GameManager.Instance != null)
+        {
+            GameManager.Instance.StartInteraction();
+        }
+
+        forestPromptIndex = 0;
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.ShowDialogue(forestIntroPrompts[0], false, true);
         }
         forestPromptInputUnlockTime = Time.time + Mathf.Max(0f, firstForestPromptLockSeconds);
 
