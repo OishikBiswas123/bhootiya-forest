@@ -69,6 +69,15 @@ public class UIManager : MonoBehaviour
     [Header("Debug")]
     public bool enableDebugLogs = false;
     
+    [Header("Game Info Panel")]
+    public GameObject gameInfoPanel;
+    public TextMeshProUGUI gameInfoBodyText;
+    public TextMeshProUGUI gameInfoPageText;
+    public GameObject gameInfoContinueArrow;
+    private int gameInfoCurrentPage = 1;
+    private const int totalGameInfoPages = 3;
+    private bool gameInfoActive = false;
+    
     [Header("UI SFX (Optional)")]
     public AudioSource uiSfxSource;
     public AudioClip choiceClickSfx;
@@ -94,6 +103,10 @@ public class UIManager : MonoBehaviour
             choicePanel.SetActive(false);
         if (continueArrow != null)
             continueArrow.SetActive(false);
+        if (gameInfoPanel != null)
+            gameInfoPanel.SetActive(false);
+        if (gameInfoContinueArrow != null)
+            gameInfoContinueArrow.SetActive(false);
         if (uiSfxSource != null)
             uiSfxSource.ignoreListenerPause = true;
             
@@ -145,7 +158,22 @@ private float inputBufferTime = 0.2f;
         if (!showingChoices)
         {
             ResetNavigationRepeat();
+            
+            // Handle Game Info panel input
+            if (gameInfoActive)
+            {
+                HandleGameInfoInput();
+                return;
+            }
+            
+            // No active UI, exit
             return;
+        }
+        
+        // Handle Game Info panel input (even when showing choices)
+        if (gameInfoActive)
+        {
+            HandleGameInfoInput();
         }
         
         // Keyboard navigation
@@ -987,6 +1015,110 @@ public void CloseDialogue()
         AudioSource src = uiSfxSource != null ? uiSfxSource : GetComponent<AudioSource>();
         if (src == null) return;
         src.PlayOneShot(clip, AudioSettingsManager.GetUiMultiplier());
+    }
+    
+    // Game Info Methods
+    public bool IsGameInfoActive()
+    {
+        return gameInfoActive;
+    }
+    
+    public void ShowGameInfo()
+    {
+        bool isForest = GameFlowManager.Instance != null && GameFlowManager.Instance.IsGameStarted();
+        
+        gameInfoCurrentPage = 1;
+        gameInfoActive = true;
+        UpdateGameInfoContent();
+        
+        if (gameInfoPanel != null)
+            gameInfoPanel.SetActive(true);
+        
+        if (gameInfoContinueArrow != null)
+            gameInfoContinueArrow.SetActive(true);
+        
+        if (PauseSettingsController.Instance != null)
+        {
+            if (isForest)
+                PauseSettingsController.Instance.HideUIForGameInfoForest();
+            else
+                PauseSettingsController.Instance.HideUIForGameInfoCity();
+        }
+    }
+    
+    public void CloseGameInfo()
+    {
+        if (!gameInfoActive) return;
+        
+        bool isForest = GameFlowManager.Instance != null && GameFlowManager.Instance.IsGameStarted();
+        
+        gameInfoActive = false;
+        
+        if (gameInfoPanel != null)
+            gameInfoPanel.SetActive(false);
+        
+        if (gameInfoContinueArrow != null)
+            gameInfoContinueArrow.SetActive(false);
+        
+        if (PauseSettingsController.Instance != null)
+        {
+            if (isForest)
+                PauseSettingsController.Instance.RestoreUIAfterGameInfoForest();
+            else
+                PauseSettingsController.Instance.RestoreUIAfterGameInfoCity();
+        }
+    }
+    
+    void HandleGameInfoInput()
+    {
+        if (!gameInfoActive) return;
+        
+        // Close on Escape key
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            CloseGameInfo();
+            return;
+        }
+        
+        if (InputBridge.GetKeyDown(KeyCode.X))
+        {
+            if (gameInfoCurrentPage < totalGameInfoPages)
+            {
+                gameInfoCurrentPage++;
+                UpdateGameInfoContent();
+                PlayPromptClickSfx();
+            }
+            else
+            {
+                CloseGameInfo();
+            }
+        }
+    }
+    
+    void UpdateGameInfoContent()
+    {
+        if (gameInfoBodyText == null || gameInfoPageText == null)
+            return;
+        
+        switch (gameInfoCurrentPage)
+        {
+            case 1:
+                gameInfoBodyText.text = "Controls\nD-Pad – Move (Up / Down / Left / Right)\nX – Interact (Talk to NPCs, use lift, search trees)\nRun – Toggle run (Move faster)";
+                gameInfoPageText.text = "1/3";
+                break;
+            case 2:
+                gameInfoBodyText.text = "Objective\nArea 1 – Exploration Zone\n\nThis area is for free exploration.\nYou can walk around the town, visit buildings, and interact with NPCs.\nThere are no missions here.\n\nTo begin the main gameplay, head towards the forest corner and find the path to the next area.\n\nArea 2 – Main Gameplay Zone\n\nYour objective is simple:\nFind the hidden key in the forest\nSearch trees using X\nOnce you find the key, return to the hut to escape";
+                gameInfoPageText.text = "2/3";
+                break;
+            case 3:
+                gameInfoBodyText.text = "Help & Tips\n\nIn the forest, not every tree is useful.\nOnly certain trees contain the key.\n\nThere are many trees, but only 25 large trees can have the key\nFocus on big and noticeable trees instead of small ones\nPress X near a tree to search it\n\nImportant Tips\nUse Run to move faster between trees\nKeep track of where you've already searched\nThe key is hidden randomly…\nAfter finding the key, return to the hut immediately";
+                gameInfoPageText.text = "3/3";
+                break;
+        }
+        
+        // Show arrow only if not on last page
+        if (gameInfoContinueArrow != null)
+            gameInfoContinueArrow.SetActive(gameInfoCurrentPage < totalGameInfoPages);
     }
 }
 

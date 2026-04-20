@@ -3,6 +3,13 @@ using UnityEngine.SceneManagement;
 
 public class PauseSettingsController : MonoBehaviour
 {
+    public static PauseSettingsController Instance;
+    
+    void Awake()
+    {
+        if (Instance == null) Instance = this;
+    }
+    
     [Header("UI References")]
     public GameObject pauseOverlay;   // Optional: dim/paused panel
     public GameObject settingsPanel;  // Settings UI panel
@@ -14,7 +21,10 @@ public class PauseSettingsController : MonoBehaviour
     public GameObject playIconObject;  // optional separate icon object
     public GameObject pauseButton;
     public GameObject settingsButton;
+    public GameObject gameInfoButton; // New: Game Info button
     public GameObject runButton;
+    public GameObject xButtonMobile; // X button to show during Game Info
+    public GameObject dpadButton; // D-Pad button
     [Header("Mobile Controls (Optional)")]
     public GameObject mobileControls;
 
@@ -36,6 +46,10 @@ public class PauseSettingsController : MonoBehaviour
         UpdatePauseIcon();
         SetMainButtonsVisible(true);
         EnsureOverlayDoesNotBlockClicks();
+        
+        // Hide Game Info button initially - only shows when paused
+        if (gameInfoButton != null)
+            gameInfoButton.SetActive(false);
     }
 
     public bool IsPaused()
@@ -69,11 +83,11 @@ public class PauseSettingsController : MonoBehaviour
         SetPaused(!isPaused);
     }
 
-    public void Pause()
+public void Pause()
     {
         SetPaused(true);
     }
-
+    
     public void Resume()
     {
         SetPaused(false);
@@ -119,6 +133,14 @@ public class PauseSettingsController : MonoBehaviour
 
         // Hide main buttons while settings is open.
         SetMainButtonsVisible(false);
+        
+        // Hide Game Info button when settings panel is open
+        if (gameInfoButton != null)
+            gameInfoButton.SetActive(false);
+        
+        // Hide mobile buttons (D-Pad, Run, X) when settings is open
+        HideMobileButtonsOnly();
+        
         HidePausedPrompt();
         UpdateOverlay();
     }
@@ -134,6 +156,9 @@ public class PauseSettingsController : MonoBehaviour
             if (pauseMenuPanel != null)
                 pauseMenuPanel.SetActive(true);
             SetMainButtonsVisible(false);
+            // Restore Game Info button when going back to pause menu
+            if (gameInfoButton != null)
+                gameInfoButton.SetActive(true);
             if (!isPaused)
                 SetPaused(true);
         }
@@ -160,25 +185,37 @@ public class PauseSettingsController : MonoBehaviour
         UpdateOverlay();
     }
 
-    public void OpenPauseMenu()
+public void OpenPauseMenu()
     {
         if (pauseMenuPanel != null)
             pauseMenuPanel.SetActive(true);
+        
         SetPaused(true);
         SetMainButtonsVisible(false);
+        
+        // Hide mobile buttons when pause menu is open
+        HideMobileButtonsOnly();
     }
-
+    
     public void ClosePauseMenu()
     {
         if (pauseMenuPanel != null)
             pauseMenuPanel.SetActive(false);
+        
         SetMainButtonsVisible(true);
     }
 
     public void ResumeFromPauseMenu()
     {
+        // Close Game Info panel if open
+        if (UIManager.Instance != null)
+            UIManager.Instance.CloseGameInfo();
+        
         ClosePauseMenu();
         SetPaused(false);
+        
+        // Show X button when game resumes
+        if (xButtonMobile != null) xButtonMobile.SetActive(true);
     }
 
     public void RestartFromPauseMenu()
@@ -202,20 +239,28 @@ public class PauseSettingsController : MonoBehaviour
 
         if (muteAudioOnPause)
             AudioListener.pause = paused;
+        
+        // Show/hide Game Info button based on pause state
+        if (gameInfoButton != null)
+            gameInfoButton.SetActive(paused);
 
         UpdatePauseIcon();
         UpdatePausedPrompt();
         EnsureOverlayDoesNotBlockClicks();
 
         // When paused in city (no pause menu), hide mobile controls.
-        if (mobileControls != null)
+        if (mobileControls != null || dpadButton != null || runButton != null)
         {
             bool settingsOpen = settingsPanel != null && settingsPanel.activeSelf;
             bool pauseMenuOpen = pauseMenuPanel != null && pauseMenuPanel.activeSelf;
             if (paused && !pauseMenuOpen && !settingsOpen)
-                mobileControls.SetActive(false);
+            {
+                HideMobileButtonsOnly();
+            }
             else if (!paused && !pauseMenuOpen && !settingsOpen)
-                mobileControls.SetActive(true);
+            {
+                ShowMobileButtonsOnly();
+            }
         }
     }
 
@@ -254,6 +299,95 @@ public class PauseSettingsController : MonoBehaviour
         if (pauseButton != null) pauseButton.SetActive(visible);
         if (settingsButton != null) settingsButton.SetActive(visible);
         if (runButton != null) runButton.SetActive(visible);
+        if (dpadButton != null) dpadButton.SetActive(visible);
+        // Note: gameInfoButton is controlled separately - only shows when paused
+    }
+    
+    public void HideMobileButtonsOnly()
+    {
+        if (dpadButton != null) dpadButton.SetActive(false);
+        if (runButton != null) runButton.SetActive(false);
+        if (xButtonMobile != null) xButtonMobile.SetActive(false);
+    }
+    
+    public void ShowMobileButtonsOnly()
+    {
+        if (dpadButton != null) dpadButton.SetActive(true);
+        if (runButton != null) runButton.SetActive(true);
+        if (xButtonMobile != null) xButtonMobile.SetActive(true);
+    }
+    
+    public void ShowXButtonOnly()
+    {
+        if (xButtonMobile != null) xButtonMobile.SetActive(true);
+    }
+    
+    public void HideXButtonOnly()
+    {
+        if (xButtonMobile != null) xButtonMobile.SetActive(false);
+    }
+    
+    public void HideMainButtonsForGameInfo()
+    {
+        if (pauseButton != null) pauseButton.SetActive(false);
+        if (settingsButton != null) settingsButton.SetActive(false);
+        if (gameInfoButton != null) gameInfoButton.SetActive(false);
+        if (runButton != null) runButton.SetActive(false);
+        if (dpadButton != null) dpadButton.SetActive(false);
+    }
+    
+    public void RestoreButtonsAfterGameInfo()
+    {
+        // Restore main buttons - game is still paused so they should be visible
+        if (pauseButton != null) pauseButton.SetActive(true);
+        if (settingsButton != null) settingsButton.SetActive(true);
+        if (gameInfoButton != null) gameInfoButton.SetActive(true);
+        if (runButton != null) runButton.SetActive(true);
+        if (dpadButton != null) dpadButton.SetActive(true);
+    }
+    
+    public void ShowXButtonForGameInfo()
+    {
+        if (xButtonMobile != null) xButtonMobile.SetActive(true);
+    }
+    
+    public void HideXButtonAfterGameInfo()
+    {
+        if (xButtonMobile != null) xButtonMobile.SetActive(false);
+    }
+    
+    public void HideUIForGameInfoCity()
+    {
+        HideMainButtonsForGameInfo();
+        ShowXButtonForGameInfo();
+        if (GhostPromptManager.Instance != null && GhostPromptManager.Instance.promptPanel != null)
+            GhostPromptManager.Instance.promptPanel.SetActive(false);
+    }
+    
+    public void HideUIForGameInfoForest()
+    {
+        HideMainButtonsForGameInfo();
+        ShowXButtonForGameInfo();
+        if (pauseMenuPanel != null) pauseMenuPanel.SetActive(false);
+        if (GameFlowManager.Instance != null && GameFlowManager.Instance.timerText != null)
+            GameFlowManager.Instance.timerText.gameObject.SetActive(false);
+    }
+    
+    public void RestoreUIAfterGameInfoCity()
+    {
+        RestoreButtonsAfterGameInfo();
+        HideXButtonAfterGameInfo();
+        if (GhostPromptManager.Instance != null && GhostPromptManager.Instance.promptPanel != null)
+            GhostPromptManager.Instance.promptPanel.SetActive(true);
+    }
+    
+    public void RestoreUIAfterGameInfoForest()
+    {
+        RestoreButtonsAfterGameInfo();
+        HideXButtonAfterGameInfo();
+        if (pauseMenuPanel != null) pauseMenuPanel.SetActive(true);
+        if (GameFlowManager.Instance != null && GameFlowManager.Instance.timerText != null)
+            GameFlowManager.Instance.timerText.gameObject.SetActive(true);
     }
 
     void UpdateMainButtonsVisibilityByUIState()
@@ -273,8 +407,10 @@ public class PauseSettingsController : MonoBehaviour
         }
 
         bool gameStarted = GameFlowManager.Instance != null && GameFlowManager.Instance.IsGameStarted();
+        bool gameInfoOpen = UIManager.Instance != null && UIManager.Instance.IsGameInfoActive();
 
         bool hideMainButtons =
+            gameInfoOpen ||
             (GameManager.Instance != null && GameManager.Instance.isInteracting) ||
             TeleportEffect.IsTeleportingGlobal ||
             (UIManager.Instance != null &&
@@ -286,17 +422,6 @@ public class PauseSettingsController : MonoBehaviour
              (gameStarted || !isPaused));
 
         SetMainButtonsVisible(!hideMainButtons);
-
-        if (mobileControls != null)
-        {
-            bool settingsOpen = settingsPanel != null && settingsPanel.activeSelf;
-            bool pauseMenuOpen = pauseMenuPanel != null && pauseMenuPanel.activeSelf;
-            bool editMode = LayoutEditorManager.Instance != null && LayoutEditorManager.Instance.IsEditMode();
-            bool hideMobile = isPaused || settingsOpen || pauseMenuOpen;
-            // Show mobile controls in edit mode so user can customize them
-            if (editMode) mobileControls.SetActive(true);
-            else mobileControls.SetActive(!hideMobile);
-        }
     }
 
     void EnsureOverlayDoesNotBlockClicks()
