@@ -166,6 +166,16 @@ private float inputBufferTime = 0.2f;
                 return;
             }
             
+            // Handle dialogue advance (for prompts with hasMore=true, like key found message)
+            if (dialoguePanel != null && dialoguePanel.activeSelf && hasMoreDialogue)
+            {
+                if (InputBridge.GetKeyDown(KeyCode.X))
+                {
+                    CloseDialogue();
+                    return;
+                }
+            }
+            
             // No active UI, exit
             return;
         }
