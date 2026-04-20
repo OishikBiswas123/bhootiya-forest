@@ -178,10 +178,19 @@ private float inputBufferTime = 0.2f;
                         PlayPromptClickSfx();
                         return;
                     }
-                    // Second click on "Please return..." - close dialogue
+                    // Second click on "Please return..." - close dialogue AND unfreeze game
                     else if (dialogueText != null && dialogueText.text == "Please return to the hut to escape the forest.")
                     {
                         CloseDialogue();
+                        // Unfreeze game (was frozen in KeyFoundManager)
+                        if (GameManager.Instance != null)
+                            GameManager.Instance.EndInteraction();
+                        // Re-enable ghosts
+                        GhostAI[] ghosts = FindObjectsByType<GhostAI>(FindObjectsSortMode.None);
+                        foreach (GhostAI ghost in ghosts)
+                        {
+                            ghost.enabled = true;
+                        }
                         return;
                     }
                     // For all other dialogues with hasMore=true, do nothing - return
