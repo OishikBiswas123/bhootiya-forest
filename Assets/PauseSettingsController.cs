@@ -169,6 +169,11 @@ public void Pause()
                 pauseMenuPanel.SetActive(false);
 
             SetMainButtonsVisible(true);
+            
+            // Restore Game Info button if game is still paused (City fix)
+            if (gameInfoButton != null && isPaused)
+                gameInfoButton.SetActive(true);
+            
             // Restore pause state that existed before opening settings.
             if (pauseOnSettingsOpen)
             {
@@ -408,6 +413,9 @@ public void OpenPauseMenu()
 
         bool gameStarted = GameFlowManager.Instance != null && GameFlowManager.Instance.IsGameStarted();
         bool gameInfoOpen = UIManager.Instance != null && UIManager.Instance.IsGameInfoActive();
+        
+        // For City: hide mobile buttons when paused but NOT when settings/gameInfo/pauseMenu panels are open
+        bool isCityPaused = isPaused && !gameInfoOpen && !(settingsPanel != null && settingsPanel.activeSelf) && !(pauseMenuPanel != null && pauseMenuPanel.activeSelf) && !gameStarted;
 
         bool hideMainButtons =
             gameInfoOpen ||
@@ -422,6 +430,12 @@ public void OpenPauseMenu()
              (gameStarted || !isPaused));
 
         SetMainButtonsVisible(!hideMainButtons);
+        
+        // For City: hide mobile buttons (dpad, run, x) but keep pause/settings visible
+        if (isCityPaused)
+        {
+            HideMobileButtonsOnly();
+        }
     }
 
     void EnsureOverlayDoesNotBlockClicks()
