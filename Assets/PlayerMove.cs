@@ -380,6 +380,7 @@ public class PlayerMove : MonoBehaviour
     public void SetFacingDirection(int direction)
     {
         lastMovingDirection = direction;
+        currentDirection = 0;
         isMoving = false;
         targetPosition = transform.position;
         if (animator != null)
@@ -403,9 +404,13 @@ public class PlayerMove : MonoBehaviour
             animator.enabled = true;
             animator.SetInteger("Direction", currentDirection != 0 ? currentDirection : lastMovingDirection);
         }
-        if (animator != null && UseIsWalking() && hasIsWalkingParam)
+        // Only enable walking if NOT frozen AND actually moving (magnitude > 0.02f)
+        bool isFrozen = GameManager.Instance != null && GameManager.Instance.isInteracting;
+        bool hasChoiceOpen = UIManager.Instance != null && UIManager.Instance.choicePanel != null && UIManager.Instance.choicePanel.activeSelf;
+        
+        if (animator != null && UseIsWalking() && hasIsWalkingParam && !isFrozen && !hasChoiceOpen && move.magnitude >= 0.02f)
         {
-            // Ensure walking state is active during movement even after freezes/teleports.
+            // Only set walking when actually moving (not at target position)
             SetIsWalking(true);
         }
 
@@ -439,28 +444,6 @@ public class PlayerMove : MonoBehaviour
             float step = Mathf.Min(speed * Time.deltaTime, move.magnitude);
             Vector3 moveVec = move.normalized * step;
             controller.Move(moveVec);
-            
-            // Debug: Log if not moving as expected (possible collision)
-            if (enableDebugLogs && move.magnitude > 0.01f)
-            {
-                float actualMove = (transform.position - (targetPosition - move)).magnitude;
-                if (controller.velocity.magnitude < 0.01f && actualMove > 0.05f)
-                {
-                    Debug.LogWarning("Player blocked! Pos: " + transform.position);
-                    
-                    // Check wider radius for ALL colliders
-                    Collider[] allColliders = Physics.OverlapSphere(transform.position, 2f);
-                    
-                    Debug.LogWarning("Total colliders found: " + allColliders.Length);
-                    foreach (var hit in allColliders)
-                    {
-                        Rigidbody rb = hit.attachedRigidbody;
-                        bool isTrigger = hit.isTrigger;
-                        string type = hit.GetType().Name;
-                        Debug.LogWarning("BLOCKER: " + hit.name + " Type=" + type + " Trigger=" + isTrigger + " Layer=" + LayerMask.LayerToName(hit.gameObject.layer));
-                    }
-                }
-            }
         }
     }
 

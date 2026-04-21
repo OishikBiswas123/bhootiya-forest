@@ -746,7 +746,7 @@ IEnumerator TeleportHomeOutdoorAfterVictory()
             player.transform.position = homeOutdoorSpawnPoint.position;
         }
 
-        AreaMusicManager.Instance?.RefreshZonesForPlayer(player.transform);
+AreaMusicManager.Instance?.RefreshZonesForPlayer(player.transform);
 
         PlayerMove playerMove = player.GetComponent<PlayerMove>();
         if (playerMove != null)
@@ -756,6 +756,28 @@ IEnumerator TeleportHomeOutdoorAfterVictory()
 
         if (GameManager.Instance != null)
             GameManager.Instance.EndInteraction();
+
+        // Force reset animation state after teleport to prevent walking animation glitch
+        PlayerMove pm = player.GetComponent<PlayerMove>();
+        Animator anim = player.GetComponent<Animator>();
+        SpriteRenderer sr = player.GetComponent<SpriteRenderer>();
+        
+        if (pm != null)
+        {
+            pm.SetFacingDirection(1);
+        }
+        
+        if (anim != null)
+        {
+            anim.SetBool("IsWalking", false);
+            anim.SetInteger("Direction", 1);
+        }
+        
+        if (pm != null && sr != null)
+        {
+            sr.sprite = pm.idleDown;
+            pm.SetLockedYPosition(player.transform.position.y);
+        }
     }
 
     void Log(string message)

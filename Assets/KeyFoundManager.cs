@@ -232,11 +232,10 @@ public class KeyFoundManager : MonoBehaviour
             keyAnimationPanel.SetActive(false);
         }
         
-        // Show final prompt
-        if (keyPromptPanel != null && keyPromptText != null)
+// Show final key found message via Dialog Prompt (2-line sequence)
+        if (UIManager.Instance != null)
         {
-            keyPromptPanel.SetActive(true);
-            keyPromptText.text = "You found the KEY!\n\nPlease return to the HUT to escape from the forest.";
+            UIManager.Instance.ShowDialogue("You found the KEY!", false, true);
         }
         keyPromptInputUnlockTime = Time.time + 1f;
         

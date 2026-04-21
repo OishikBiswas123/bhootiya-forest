@@ -243,7 +243,6 @@ public class GhostAI : MonoBehaviour
     {
         if (other.CompareTag("Player") && !isCatching)
         {
-            Debug.Log("Ghost caught player!");
             GhostSpawner.Instance?.StopGhostSpawnSfx();
             isCatching = true;
             catchTimer = 0f;

@@ -215,7 +215,6 @@ public class RandomDialogueNPC : MonoBehaviour
     
     void OnUIManagerDialogueClosed()
     {
-        Debug.Log("RandomDialogueNPC: OnUIManagerDialogueClosed called");
         if (isInteracting)
         {
             EndDialogue();
@@ -224,7 +223,6 @@ public class RandomDialogueNPC : MonoBehaviour
     
     void OnUIManagerDialogueAdvance()
     {
-        Debug.Log("RandomDialogueNPC: OnUIManagerDialogueAdvance called");
         if (isInteracting)
         {
             AdvanceDialogue();
