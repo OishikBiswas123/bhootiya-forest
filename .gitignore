@@ -32,3 +32,4 @@ Assets/Plugins/Zustand/
 # OS generated
 .DS_Store
 Thumbs.db
+.aider*

@@ -221,9 +221,20 @@ private float inputBufferTime = 0.2f;
                     // Don't close immediately - give time for dialogue to show
                     if (Time.time - dialogueShowTime > dialogueCloseDelay)
                     {
-                        CloseDialogue();
-                        if (GameManager.Instance != null)
-                            GameManager.Instance.EndInteraction();
+                        // Let the active dialogue owner advance to the next line.
+                        // If nobody is listening, fall back to the old close behavior.
+                        if (onDialogueAdvance != null)
+                        {
+                            PlayPromptClickSfx();
+                            SetInputCooldown(true);
+                            onDialogueAdvance.Invoke();
+                        }
+                        else
+                        {
+                            CloseDialogue();
+                            if (GameManager.Instance != null)
+                                GameManager.Instance.EndInteraction();
+                        }
                     }
                 }
                 return;

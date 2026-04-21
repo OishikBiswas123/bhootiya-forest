@@ -303,6 +303,11 @@ void OnMoodGreat()
 
     void HandleUpstairsFlowAdvance()
     {
+        if (isAutoWalking)
+        {
+            return;
+        }
+
         if (activeSourceIntroCompleted)
         {
             EndDialogue();
@@ -475,6 +480,11 @@ void OnMoodGreat()
         // Player pressed X to advance dialogue
         if (isInteracting)
         {
+            if (isAutoWalking)
+            {
+                return;
+            }
+
             if (usingOutsideFlow)
             {
                 HandleOutsideFlowAdvance();

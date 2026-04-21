@@ -35,6 +35,7 @@ public class HutTeleport : MonoBehaviour
     private float nextInteractAllowedTime = 0f;
     private bool isTeleporting = false;
     private float forestPromptInputUnlockTime = 0f;
+    private bool forestIntroActive = false;
     
     void Start()
     {
@@ -55,15 +56,9 @@ public class HutTeleport : MonoBehaviour
         if (player == null) return;
         if (isTeleporting) return;
         
-        // Handle forest intro prompts
-        if (hutID == 1 && forestPromptIndex >= 0)
-        {
-            if (Time.time >= forestPromptInputUnlockTime && InputBridge.GetKeyDown(interactKey))
-            {
-                HandleForestIntro();
-            }
+        // Forest intro is advanced through UIManager callbacks, not direct key polling here.
+        if (hutID == 1 && forestIntroActive)
             return;
-        }
         
         // Skip the showingGameBegins check - it's now automatic
         
@@ -95,25 +90,20 @@ public class HutTeleport : MonoBehaviour
     void HandleForestIntro()
     {
         if (isTeleporting) return;
-
-        // Close current dialogue first
-        if (UIManager.Instance != null)
-        {
-            UIManager.Instance.CloseDialogue();
-        }
-        
-        // Prevent stacked delayed calls from rapid input
-        CancelInvoke("ShowNextPrompt");
         
         forestPromptIndex++;
         
         if (forestPromptIndex < forestIntroPrompts.Length)
         {
-            // Show next prompt after a brief delay
-            Invoke("ShowNextPrompt", 0.1f);
+            ShowNextPrompt();
         }
         else
         {
+            if (UIManager.Instance != null)
+            {
+                UIManager.Instance.CloseDialogue();
+            }
+
             // All prompts shown - show game begins screen for 3 seconds then auto-start
             if (GameFlowManager.Instance != null)
             {
@@ -129,44 +119,102 @@ public class HutTeleport : MonoBehaviour
     {
         if (forestPromptIndex < forestIntroPrompts.Length && UIManager.Instance != null)
         {
-            bool hasMore = true;
+            bool hasMore = forestPromptIndex < forestIntroPrompts.Length - 1;
             UIManager.Instance.ShowDialogue(forestIntroPrompts[forestPromptIndex], false, hasMore);
         }
     }
-    
+
+    void BeginForestIntro()
+    {
+        forestIntroActive = true;
+        forestPromptIndex = 0;
+        // The first intro line should advance on the next clear X press, not feel locked for multiple presses.
+        forestPromptInputUnlockTime = Time.time + Mathf.Min(0.2f, Mathf.Max(0f, firstForestPromptLockSeconds));
+
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.onDialogueAdvance -= OnForestIntroAdvance;
+            UIManager.Instance.onDialogueClosed -= OnForestIntroDialogueClosed;
+            UIManager.Instance.onDialogueAdvance += OnForestIntroAdvance;
+            UIManager.Instance.onDialogueClosed += OnForestIntroDialogueClosed;
+            UIManager.Instance.SetInputCooldown(true);
+        }
+
+        ShowNextPrompt();
+    }
+
+    void EndForestIntroCallbacks()
+    {
+        forestIntroActive = false;
+
+        if (UIManager.Instance != null)
+        {
+            UIManager.Instance.onDialogueAdvance -= OnForestIntroAdvance;
+            UIManager.Instance.onDialogueClosed -= OnForestIntroDialogueClosed;
+        }
+    }
+
+    void OnForestIntroAdvance()
+    {
+        if (!forestIntroActive || isTeleporting) return;
+        if (Time.time < forestPromptInputUnlockTime) return;
+
+        HandleForestIntro();
+    }
+
+    void OnForestIntroDialogueClosed()
+    {
+        if (!forestIntroActive) return;
+
+        // Closing the final intro line should transition into the game-begin screen.
+        if (forestPromptIndex >= forestIntroPrompts.Length - 1)
+        {
+            EndForestIntroCallbacks();
+
+            if (GameFlowManager.Instance != null)
+            {
+                GameFlowManager.Instance.ShowGameBeginsScreen();
+            }
+
+            CancelInvoke("AutoStartGame");
+            Invoke("AutoStartGame", Mathf.Max(3f, gameBeginScreenMinDuration));
+        }
+    }
+
     void AutoStartGame()
     {
         Log("AutoStartGame CALLED!");
-        
+
         forestPromptIndex = -1;
-        
+        forestIntroActive = false;
+
         // Hide game begins screen
         if (GameFlowManager.Instance != null)
         {
             GameFlowManager.Instance.HideGameBeginsScreen();
         }
-        
+
         // Unfreeze player
         if (GameManager.Instance != null)
         {
             GameManager.Instance.EndInteraction();
         }
-        
+
         // Start the actual game (timer + ghost spawning)
         if (GameFlowManager.Instance != null)
         {
             GameFlowManager.Instance.StartActualGame();
         }
-        
+
         Log("AutoStartGame COMPLETE!");
     }
-    
+
     // Legacy method - not used anymore but kept for compatibility
     void StartActualGame()
     {
         AutoStartGame();
     }
-    
+
     void ShowTeleportPrompt()
     {
         if (hutID == 1)
@@ -269,7 +317,6 @@ public class HutTeleport : MonoBehaviour
     {
         isTeleporting = true;
         nextInteractAllowedTime = Time.time + 10f;
-        CancelInvoke("ShowNextPrompt");
 
         if (UIManager.Instance != null)
         {
@@ -301,13 +348,7 @@ public class HutTeleport : MonoBehaviour
                 GameManager.Instance.StartInteraction();
             }
             
-            // Start forest intro prompts
-            forestPromptIndex = 0;
-            if (UIManager.Instance != null)
-            {
-                UIManager.Instance.ShowDialogue(forestIntroPrompts[0], false);
-            }
-            forestPromptInputUnlockTime = Time.time + Mathf.Max(0f, firstForestPromptLockSeconds);
+            BeginForestIntro();
         }
 
         isTeleporting = false;
@@ -318,7 +359,6 @@ public class HutTeleport : MonoBehaviour
     {
         isTeleporting = true;
         nextInteractAllowedTime = Time.time + 10f;
-        CancelInvoke("ShowNextPrompt");
 
         if (UIManager.Instance != null)
         {
@@ -340,12 +380,7 @@ public class HutTeleport : MonoBehaviour
             GameManager.Instance.StartInteraction();
         }
 
-        forestPromptIndex = 0;
-        if (UIManager.Instance != null)
-        {
-            UIManager.Instance.ShowDialogue(forestIntroPrompts[0], false);
-        }
-        forestPromptInputUnlockTime = Time.time + Mathf.Max(0f, firstForestPromptLockSeconds);
+        BeginForestIntro();
 
         isTeleporting = false;
         nextInteractAllowedTime = Time.time + 0.25f;
@@ -443,6 +478,11 @@ public class HutTeleport : MonoBehaviour
         {
             Debug.Log(message);
         }
+    }
+
+    void OnDisable()
+    {
+        EndForestIntroCallbacks();
     }
 }
 

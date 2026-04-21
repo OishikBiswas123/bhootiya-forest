@@ -57,6 +57,17 @@ public class PauseSettingsController : MonoBehaviour
         return isPaused;
     }
 
+    bool IsForestGameplayContext()
+    {
+        if (GameFlowManager.Instance == null) return false;
+
+        if (GameFlowManager.Instance.IsGameStarted())
+            return true;
+
+        return GameFlowManager.Instance.timerText != null &&
+               GameFlowManager.Instance.timerText.gameObject.activeInHierarchy;
+    }
+
     public void SetForceBlur(bool value)
     {
         forceBlur = value;
@@ -72,7 +83,7 @@ public class PauseSettingsController : MonoBehaviour
 
     public void TogglePause()
     {
-        bool gameStarted = GameFlowManager.Instance != null && GameFlowManager.Instance.IsGameStarted();
+        bool gameStarted = IsForestGameplayContext();
 
         if (gameStarted)
         {
@@ -229,6 +240,11 @@ public void OpenPauseMenu()
         // Restart the forest run from landing (no takeoff).
         SetPaused(false);
         ClosePauseMenu();
+
+        // Restore the mobile interact button before restarting the forest flow.
+        if (xButtonMobile != null)
+            xButtonMobile.SetActive(true);
+
         if (GameFlowManager.Instance != null)
             GameFlowManager.Instance.RestartForestFromPause();
     }
@@ -416,23 +432,35 @@ public void OpenPauseMenu()
             return;
         }
 
-        bool gameStarted = GameFlowManager.Instance != null && GameFlowManager.Instance.IsGameStarted();
+        bool gameStarted = IsForestGameplayContext();
         bool gameInfoOpen = UIManager.Instance != null && UIManager.Instance.IsGameInfoActive();
         
         // For City: hide mobile buttons when paused but NOT when settings/gameInfo/pauseMenu panels are open
         bool isCityPaused = isPaused && !gameInfoOpen && !(settingsPanel != null && settingsPanel.activeSelf) && !(pauseMenuPanel != null && pauseMenuPanel.activeSelf) && !gameStarted;
 
+        bool isInteracting = GameManager.Instance != null && GameManager.Instance.isInteracting;
+        bool isTeleporting = TeleportEffect.IsTeleportingGlobal;
+        bool dialogueOpen =
+            UIManager.Instance != null &&
+            UIManager.Instance.dialoguePanel != null &&
+            UIManager.Instance.dialoguePanel.activeSelf;
+        bool choiceOpen =
+            UIManager.Instance != null &&
+            UIManager.Instance.choicePanel != null &&
+            UIManager.Instance.choicePanel.activeSelf;
+        bool ghostPromptOpen =
+            GhostPromptManager.Instance != null &&
+            GhostPromptManager.Instance.promptPanel != null &&
+            GhostPromptManager.Instance.promptPanel.activeSelf &&
+            (gameStarted || !isPaused);
+
         bool hideMainButtons =
             gameInfoOpen ||
-            (GameManager.Instance != null && GameManager.Instance.isInteracting) ||
-            TeleportEffect.IsTeleportingGlobal ||
-            (UIManager.Instance != null &&
-             ((UIManager.Instance.dialoguePanel != null && UIManager.Instance.dialoguePanel.activeSelf) ||
-              (UIManager.Instance.choicePanel != null && UIManager.Instance.choicePanel.activeSelf))) ||
-            (GhostPromptManager.Instance != null &&
-             GhostPromptManager.Instance.promptPanel != null &&
-             GhostPromptManager.Instance.promptPanel.activeSelf &&
-             (gameStarted || !isPaused));
+            isInteracting ||
+            isTeleporting ||
+            dialogueOpen ||
+            choiceOpen ||
+            ghostPromptOpen;
 
         SetMainButtonsVisible(!hideMainButtons);
         
@@ -442,6 +470,19 @@ public void OpenPauseMenu()
             UIManager.Instance.choicePanel.activeSelf)
         {
             ShowMobileButtonsOnly();
+        }
+
+        // Ghost prompts are auto-prompts; they should not hide movement controls.
+        if (ghostPromptOpen &&
+            !isCityPaused &&
+            !gameInfoOpen &&
+            !isInteracting &&
+            !isTeleporting &&
+            !dialogueOpen &&
+            !choiceOpen)
+        {
+            if (dpadButton != null) dpadButton.SetActive(true);
+            if (runButton != null) runButton.SetActive(true);
         }
         
         // For City: hide mobile buttons (dpad, run, x) but keep pause/settings visible
@@ -482,7 +523,7 @@ public void OpenPauseMenu()
     {
         if (!showPausedPromptInCity) return;
 
-        bool gameStarted = GameFlowManager.Instance != null && GameFlowManager.Instance.IsGameStarted();
+        bool gameStarted = IsForestGameplayContext();
         if (gameStarted)
         {
             HidePausedPrompt();

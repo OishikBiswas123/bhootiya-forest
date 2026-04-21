@@ -76,6 +76,8 @@ void Update()
             if (waitTime <= 0)
             {
                 // Time's up - show result, keep player frozen
+                if (GameManager.Instance != null)
+                    GameManager.Instance.StartInteraction();
                 UIManager.Instance.ShowDialogue("There is nothing inside.", true, false);
                 treePhase = 4;
             }
@@ -190,34 +192,24 @@ void Update()
         }
         else
         {
-            // Non-key: show "..." - don't close choice panel yet
-            // Just change the dialogue text to show searching
+            // Non-key: keep player frozen through the full search/result flow.
+            if (GameManager.Instance != null)
+                GameManager.Instance.StartInteraction();
+
             UIManager.Instance.ShowDialogue("...", true, false);
-            // After 1.5s, show final result
-            Invoke("ShowNoKeyResult", 1.5f);
+            waitTime = 1.5f;
         }
-    }
-    
-    void ShowNoKeyResult()
-    {
-        if (treePhase != 3) return;
-        
-        // Show final result
-        UIManager.Instance.ShowDialogue("There is nothing inside.", true, false);
-        treePhase = 4;
     }
     
     void OnNo()
     {
         if (treePhase != 2) return;
         
-        // Cancel any pending invoke
-        CancelInvoke("ShowNoKeyResult");
-        
         // Close and reset
         UIManager.Instance.CloseDialogue();
         GameManager.Instance.EndInteraction();
         treePhase = 0;
+        waitTime = 0f;
         currentTree = null;
         currentTreeIndex = -1;
     }
@@ -225,6 +217,7 @@ void Update()
     void ResetInteraction()
     {
         treePhase = 0;
+        waitTime = 0f;
         currentTree = null;
         currentTreeIndex = -1;
         UIManager.Instance.CloseDialogue();
