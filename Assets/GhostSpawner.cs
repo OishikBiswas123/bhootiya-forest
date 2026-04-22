@@ -138,6 +138,8 @@ void SpawnGhost()
         SetNextSpawnTime();
         currentGhost = null;
         spawningEnabled = false;
+        firstSpawnDone = false;
+        lastChaseClipIndex = -1;
         Log("Ghost spawner reset");
     }
 

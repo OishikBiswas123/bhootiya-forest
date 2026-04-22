@@ -130,6 +130,11 @@ public class GameFlowManager : MonoBehaviour
         currentTime = gameTimeLimit;
         
         Log("ACTUAL GAME STARTED! gameStarted=" + gameStarted + ", Timer: " + gameTimeLimit + " seconds");
+
+        if (GhostPromptManager.Instance != null)
+        {
+            GhostPromptManager.Instance.ResetFirstSpawn();
+        }
         
         // Make sure timer text is visible
         if (timerText != null)
