@@ -8,7 +8,7 @@ public class GameManager : MonoBehaviour
     [Header("Debug")]
     public bool enableDebugLogs = false;
     
-    void Awake()
+void Awake()
     {
         if (Instance == null)
         {
@@ -17,6 +17,14 @@ public class GameManager : MonoBehaviour
         else
         {
             Destroy(gameObject);
+        }
+    }
+    
+    void OnDestroy()
+    {
+        if (Instance == this)
+        {
+            Instance = null;
         }
     }
     

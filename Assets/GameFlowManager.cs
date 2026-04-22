@@ -136,11 +136,12 @@ public class GameFlowManager : MonoBehaviour
             GhostPromptManager.Instance.ResetFirstSpawn();
         }
         
-        // Make sure timer text is visible
+// Make sure timer text is visible
         if (timerText != null)
         {
             Log("Timer text found - enabling it!");
             timerText.gameObject.SetActive(true);
+            timerText.color = Color.white;
         }
         else
         {

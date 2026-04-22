@@ -80,7 +80,7 @@ public class HospitalReceptionNPCDialogue : MonoBehaviour
 
         if (currentLineIndex < dialogueLines.Length)
         {
-            bool hasMore = true;
+            bool hasMore = currentLineIndex < dialogueLines.Length - 1;
             UIManager.Instance?.ShowDialogue(dialogueLines[currentLineIndex], false, hasMore);
         }
         else

@@ -185,7 +185,7 @@ public class NPCDialogue : MonoBehaviour
         if (currentLineIndex < introLines.Length)
         {
             bool isLastIntroLine = (currentLineIndex == introLines.Length - 1);
-            bool hasMore = true;
+            bool hasMore = currentLineIndex < introLines.Length - 1;
             if (UIManager.Instance != null)
             {
                 UIManager.Instance.ShowDialogue(introLines[currentLineIndex], false, hasMore);
@@ -264,7 +264,7 @@ public class NPCDialogue : MonoBehaviour
         
         if (currentAnswerLines != null && currentAnswerLineIndex < currentAnswerLines.Length)
         {
-            bool hasMore = true;
+            bool hasMore = currentAnswerLineIndex < currentAnswerLines.Length - 1;
             if (UIManager.Instance != null)
             {
                 UIManager.Instance.ShowDialogue(currentAnswerLines[currentAnswerLineIndex], false, hasMore);

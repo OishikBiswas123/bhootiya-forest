@@ -113,7 +113,7 @@ public class FruitTreeNPCDialogue : MonoBehaviour
 
         if (currentLineIndex < dialogueLines.Length)
         {
-            bool hasMore = true;
+            bool hasMore = currentLineIndex < dialogueLines.Length - 1;
             if (UIManager.Instance != null)
             {
                 UIManager.Instance.ShowDialogue(dialogueLines[currentLineIndex], false, hasMore);
